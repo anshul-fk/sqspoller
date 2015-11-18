@@ -1,15 +1,16 @@
 require "logger"
 require "concurrent"
 require "net/http"
+require "aws-sdk"
 
 module Sqspoller
   class QueueController
 
-    def initialize(queue_name, polling_threads_count, task_delegator)
+    def initialize(queue_name, polling_threads_count, task_delegator, access_key_id, secret_access_key, region)
       @logger = Logger.new(STDOUT)
       @queue_name = queue_name
       @polling_threads_count = polling_threads_count
-      @sqs = Aws::SQS::Client.new
+      @sqs = Aws::SQS::Client.new(:access_key_id => access_key_id, :secret_access_key => secret_access_key, :region => region)
       @queue_details = @sqs.get_queue_url(queue_name: queue_name)
       @threads = []
       @task_delegator = task_delegator
