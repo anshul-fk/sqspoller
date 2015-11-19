@@ -8,7 +8,7 @@ module Sqspoller
     def initialize(worker_thread_pool_size, waiting_tasks_ratio, worker_task)
       @logger = Logger.new(STDOUT)
       @worker_thread_pool_size = worker_thread_pool_size
-      @queue_size = waiting_tasks_ratio * worker_thread_pool_size
+      @max_allowed_queue_size = waiting_tasks_ratio * worker_thread_pool_size
       @semaphore = Mutex.new
       @worker_task = worker_task
       @pending_schedule_tasks = 0
@@ -16,14 +16,14 @@ module Sqspoller
     end
 
     def initialize_connection_pool
-      @connection_pool = Concurrent::RubyThreadPoolExecutor.new(max_threads: @worker_thread_pool_size, min_threads: 1, max_queue: @queue_size)
+      @connection_pool = Concurrent::RubyThreadPoolExecutor.new(max_threads: @worker_thread_pool_size, min_threads: 1, max_queue: @max_allowed_queue_size)
     end
 
     def process(message, message_id)
       @semaphore.synchronize {
         @pending_schedule_tasks +=1
-        if @connection_pool.queue_length == @queue_size
-          while @connection_pool.queue_length > @worker_thread_pool_size || @connection_pool.queue_length + @pending_schedule_tasks > @queue_size
+        if @connection_pool.queue_length == @max_allowed_queue_size
+          while @connection_pool.queue_length > @worker_thread_pool_size || @connection_pool.queue_length + @pending_schedule_tasks >= @max_allowed_queue_size
             sleep(0.01)
           end
         end

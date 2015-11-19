@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/opt/rubies/ruby-2.2.2/bin/ruby
 
 require 'sqspoller'
 
