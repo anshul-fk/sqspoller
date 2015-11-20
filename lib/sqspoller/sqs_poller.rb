@@ -12,7 +12,6 @@ module Sqspoller
   class SqsPoller
     class << self
 
-
       def sym(map)
         if map.class == Hash
           map = map.inject({}){|memo,(k,v)| memo[k.to_sym] = sym(v); memo}
