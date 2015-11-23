@@ -1,30 +1,49 @@
 require "logger"
 require "concurrent"
 require "net/http"
+require "rest-client"
+require "json"
 
 module Sqspoller
 
 
   class WorkerTask
 
-    def initialize(worker_configuration)
-      @logger = Logger.new(STDOUT)
+    HEADERS = {
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/json'
+    }
+
+    def initialize(worker_configuration, logger_file)
+      @logger = Logger.new(logger_file)
       @http_method = worker_configuration[:http_method]
       @http_url = worker_configuration[:http_url]
       @uri = URI(@http_url)
     end
 
     def process(message, message_id)
+      parsed_message = JSON.parse(message)
+
       if @http_method.downcase == "post"
-        response = Net::HTTP.post_form(@uri, JSON.parse(message))
+        RestClient::Request.execute(:method => :post, :url => @http_url, :payload => parsed_message.to_json, :headers => HEADERS,  :timeout => 10, :open_timeout => 5) do |response, request, result|
+          process_http_response response
+        end
       elsif @http_method.downcase == "get"
-        uri = URI(@http_url)
-        uri.query = URI.encode_www_form(JSON.parse(message))
-        response = Net::HTTP.get_response(uri)
+        RestClient::Request.execute(:method => :get, :url => @http_url, :payload => parsed_message.to_json, :headers => HEADERS,  :timeout => 10, :open_timeout => 5) do |response, request, result|
+          process_http_response response
+        end
       else
         raise "Invalid http_method provided. #{http_method}"
       end
-      @logger.info "Got HTTP response as #{response.code}, #{response.body}"
+    end
+
+    def process_http_response(response)
+      case response.code
+      when 200
+        return "OK"
+      else
+        raise "Service did not return 200 OK response. #{response.code}"
+      end
     end
   end
 

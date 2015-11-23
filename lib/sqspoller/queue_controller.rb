@@ -6,8 +6,8 @@ require "aws-sdk"
 module Sqspoller
   class QueueController
 
-    def initialize(queue_name, polling_threads_count, task_delegator, access_key_id, secret_access_key, region)
-      @logger = Logger.new(STDOUT)
+    def initialize(queue_name, polling_threads_count, task_delegator, access_key_id, secret_access_key, region, logger_file)
+      @logger = Logger.new(logger_file)
       @queue_name = queue_name
       @polling_threads_count = polling_threads_count
       @sqs = Aws::SQS::Client.new(:access_key_id => access_key_id, :secret_access_key => secret_access_key, :region => region)
@@ -33,16 +33,25 @@ module Sqspoller
         @logger.info "Poller thread started for queue: #{queue_url}"
         poller = Aws::SQS::QueuePoller.new(queue_url)
 
-        poller.poll do |received_message|
-          begin
-            @logger.info "Received message #{received_message.message_id}"
-            @task_delegator.process received_message.body, received_message.message_id
-          rescue Exception => e
-            puts "Encountered error, will not delete message. #{received_message.message_id}"
-            throw :skip_delete
-          end
+        while true
+          msgs = @sqs.receive_message :queue_url => queue_url
+          msgs.messages.each { |received_message|
+            begin
+              @logger.info "Received message #{received_message.message_id}"
+              @task_delegator.process self, received_message, @queue_name
+            rescue Exception => e
+              @logger.info "Encountered error #{e.message} while submitting message from queue #{queue_url}"
+            end
+          }
         end
       end
+    end
+
+    def delete_message(receipt_handle)
+      @sqs.delete_message(
+        queue_url: @queue_details.queue_url,
+        receipt_handle: receipt_handle
+      )
     end
 
   end

@@ -1,5 +1,4 @@
 #!/opt/rubies/ruby-2.2.2/bin/ruby
-
 require 'sqspoller'
 
 
@@ -7,5 +6,6 @@ puts "SQSPoller arguments check"
 ARGV.each do |arg|
   puts "arg: #{arg}"
 end
-
-Sqspoller::SqsPoller.start_poller ARGV[0], ARGV[1], ARGV[2], ARGV[3], ARGV[4]
+puts "Starting poller"
+Sqspoller::SqsPoller.start_poller ARGV[0], ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5]
+puts "poller done"
