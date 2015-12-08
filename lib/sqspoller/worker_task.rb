@@ -18,6 +18,7 @@ module Sqspoller
       @logger = Logger.new(logger_file)
       @http_method = worker_configuration[:http_method]
       @http_url = worker_configuration[:http_url]
+      @timeout = worker_configuration[:timeout] ? worker_configuration[:timeout].to_i : 450
       @uri = URI(@http_url)
     end
 
@@ -25,11 +26,11 @@ module Sqspoller
       parsed_message = JSON.parse(message)
 
       if @http_method.downcase == "post"
-        RestClient::Request.execute(:method => :post, :url => @http_url, :payload => parsed_message.to_json, :headers => HEADERS,  :timeout => 10, :open_timeout => 5) do |response, request, result|
+        RestClient::Request.execute(:method => :post, :url => @http_url, :payload => parsed_message.to_json, :headers => HEADERS,  :timeout => @timeout, :open_timeout => 5) do |response, request, result|
           process_http_response response
         end
       elsif @http_method.downcase == "get"
-        RestClient::Request.execute(:method => :get, :url => @http_url, :payload => parsed_message.to_json, :headers => HEADERS,  :timeout => 10, :open_timeout => 5) do |response, request, result|
+        RestClient::Request.execute(:method => :get, :url => @http_url, :payload => parsed_message.to_json, :headers => HEADERS,  :timeout => @timeout, :open_timeout => 5) do |response, request, result|
           process_http_response response
         end
       else

@@ -29,14 +29,14 @@ module Sqspoller
         end
       }
       begin
-        @logger.info "Scheduling worker task for queue: #{queue_name}, message: #{message.message_id}"
+        @logger.info "Scheduling worker task for message: #{message.message_id}"
 
         @connection_pool.post do
           begin
-            @logger.info "Starting worker task for queue: #{queue_name}, message: #{message.message_id}"
+            @logger.info "Starting worker task for message: #{message.message_id}"
             @worker_task.process(message.body, message.message_id)
             @pending_schedule_tasks -= 1
-            @logger.info "Finished worker task for queue: #{queue_name}, message: #{message.message_id}"
+            @logger.info "Finished worker task for message: #{message.message_id}"
             queue_controller.delete_message message.receipt_handle
           rescue Exception => e
             @pending_schedule_tasks -= 1

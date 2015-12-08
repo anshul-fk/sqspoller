@@ -37,7 +37,7 @@ module Sqspoller
           msgs = @sqs.receive_message :queue_url => queue_url
           msgs.messages.each { |received_message|
             begin
-              @logger.info "Received message #{received_message.message_id}"
+              @logger.info "Received message #{@queue_name} : #{received_message.message_id}"
               @task_delegator.process self, received_message, @queue_name
             rescue Exception => e
               @logger.info "Encountered error #{e.message} while submitting message from queue #{queue_url}"
