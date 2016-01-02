@@ -23,9 +23,11 @@ module Sqspoller
       @semaphore.synchronize {
         @pending_schedule_tasks +=1
         if @connection_pool.queue_length == @max_allowed_queue_size
+          @logger.info "Entered wait state, connection_pool size reached max threshold"
           while @connection_pool.queue_length > @worker_thread_pool_size || @connection_pool.queue_length + @pending_schedule_tasks >= @max_allowed_queue_size
             sleep(0.01)
           end
+          @logger.info "Exiting wait state, connection_pool size reached below worker_thread_pool_size"
         end
       }
       begin

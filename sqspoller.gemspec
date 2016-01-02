@@ -5,7 +5,7 @@ require 'sqspoller/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "fourkites-sqspoller"
-  spec.version       = '0.1.12.20'
+  spec.version       = '0.1.12.21'
   spec.authors       = ["anshul-fk"]
   spec.email         = ["anshul@fourkites.com"]
 
