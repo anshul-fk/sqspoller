@@ -34,7 +34,13 @@ module Sqspoller
         poller = Aws::SQS::QueuePoller.new(queue_url)
 
         while true
-          msgs = @sqs.receive_message :queue_url => queue_url
+          @logger.info "Polling queue #{@queue_name} for messages"
+          begin
+            msgs = @sqs.receive_message :queue_url => queue_url
+          rescue Exception => e
+            @logger.info "Error receiving messages from queue #{@queue_name}: #{e.message}"
+            next
+          end
           msgs.messages.each { |received_message|
             begin
               @logger.info "Received message #{@queue_name} : #{received_message.message_id}"
