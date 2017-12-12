@@ -50,6 +50,10 @@ module Sqspoller
         }
         message_delegator = initialize_worker config[:worker_configuration], total_poller_threads, logger_file
         queues_config.keys.each { |queue|
+          if queues_config[queue][:polling_threads] == 0
+            @logger.info "Polling disabled for queue: #{queue}"
+            next
+          end
           @logger.info "Creating QueueController object for queue: #{queue}"
           qc = QueueController.new queue, queues_config[queue][:polling_threads], message_delegator, access_key_id, secret_access_key, region, logger_file
           qcs << qc
