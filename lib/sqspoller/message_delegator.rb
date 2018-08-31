@@ -40,7 +40,7 @@ module Sqspoller
             @logger.info "Finished worker task for message: #{message.message_id}"
             queue_controller.delete_message message.receipt_handle
           rescue Exception => e
-            @logger.info "Caught error for message: #{message}, error: #{e.message}, #{e.backtrace.join("\n")}"
+            @logger.info "Caught error: #{e.message}, #{e.backtrace.join("\n")} for message id: #{message.message_id}, body: #{message.body}"
           end
           @pending_schedule_tasks -= 1
         end
